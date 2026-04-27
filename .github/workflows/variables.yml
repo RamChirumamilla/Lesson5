@@ -5,7 +5,43 @@ on:
   push:
   
 jobs:
-  test_variables:         
+  test_expressions:
+    name: job to test expressions
+    runs-on: ubuntu-latest
+    env:
+      aBoolean: ${{ false }}
+      aNull: ${{ null }}
+      aNumber: ${{ 42 }}
+      aString: this is a string
+    steps:
+      - name: test null
+        if: (env.aNull == null)
+        run: echo this variable is null
+      - name: test boolean
+        if: (env.aBoolean == 'false')
+        run: echo this variable is false
+      - name: contains function
+        if: ${{ contains(env.aString, 'this') }}
+        run: |
+          echo "our string var ciontains the workd this"
+          echos "but here is a type that will make this step fail "
+      - name: test status check and format function
+        if: ${{ failure() }}
+        env:
+            FORMAT_VAR: ${{ format('Github {0} {1} {2}', 'actions','is','awsome') }}
+        run: |
+          echo "this step runs a special script to clean up after the fialed step"
+          echo ${{ env.FORMAT_VAR}}
+      - name: function and always status check
+        if: ${{ startsWith(env.aString,'this') && always()}}
+        run: sleep 60 
+      - name: test cancel status check
+        if: ${{ cancelled() }}
+        run: echo "this job runs if a workflow is cancelled, it can also be used for celan-up scripts"
+        
+        
+  test_variables:        
+    if: (github.event_name == 'pull_request')
     env: 
       JOB_VAR: "Job level variable"
     name: job to test variables
